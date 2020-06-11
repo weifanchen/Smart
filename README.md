@@ -4,6 +4,8 @@
 
 # Introduction
 # Architecture
+![alt text](./pipelin3.jpg)
+
 # Dataset
 # Engineering challenges
 # Trade-offs
