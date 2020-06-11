@@ -47,7 +47,7 @@ for dt,dd in data.items():
             name_list = name.split('_')
             machine_id = '_'.join(name_list[3:])
             household_id = name_list[2]
-            date_time=datetime.fromtimestamp(int(dt)/1000.) # datetime.datetime
+            date_time=datetime.fromtimestamp(int(dt)/1000.) 
             the_list.append([date_time,household_id,machine_id,usage])
 
 new_df=pd.DataFrame(the_list,columns=['timestamp','household_id','machine_id','usage'])
