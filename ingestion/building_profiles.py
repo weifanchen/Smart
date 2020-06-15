@@ -13,10 +13,6 @@ import uuid
 '''
 Create household profiles, machine profiles
 
-currently
-10 industrial 
-30 residential 
-5 public
 https://data.open-power-system-data.org/household_data/2020-04-15
 *****
 
@@ -28,6 +24,7 @@ ev
 # data = pd.read_csv('./data/usage_newschema.csv')
 fake = Faker('de_DE')
 
+
 industrial_num = 10
 residential_num = 30
 public_num = 5
@@ -36,7 +33,7 @@ housetype_list = ['public','residential','industrial']
 
 machine_list = {
     'pv_generators' : ['pv_facade','pv_roof','pv','pv'],
-    'industrial_comsumption_machines' : ['machine','machine','machine','machine','refrigerator','ventilation','compressor','area_room','area_room','area_room','area_office','area_offices','area_offices','cooling_aggregate','cooling_pumps','ev','ev','ev'], #0~10
+    'industrial_comsumption_machines' : ['machine','machine','machine','machine','refrigerator','ventilation','compressor','area_room','area_room','area_room','area_office','area_office','area_office','cooling_aggregate','cooling_pumps','ev','ev','ev'], #0~10
     'residential_comsumption_machines' : ['refrigerator','dishwasher','freezer','heat_pump','washing_machine','circulation_pump','ev','ev'], #0~2
     'public_comsumption_machines' : ['grid_import'], #1
     'TF' :[True,False]
@@ -45,9 +42,9 @@ machine_list = {
 
 def generate_household(housetype,num,machine_list):
     households = list()
-    household = dict()
     machine_profiles = list()
     for _ in range(1,num+1):
+        household = dict()
         fake_address=fake.address()
         household_id = hashlib.sha1(str.encode(fake_address)).hexdigest()
         household['address'] = fake_address
@@ -87,15 +84,13 @@ def generate_meter(housetype,machine_list,household_id):
     return result, machine_prof
  
 
-# household profile
-# machine profile
-# event stimulation more efficient
 
 household_profile = list()
 machine_profile = list()
 households_ind, machines_ind = generate_household('industrial',industrial_num,machine_list)
 households_res, machines_res = generate_household('residential',residential_num,machine_list)
 households_pub, machines_pub = generate_household('public',public_num,machine_list)
+
 household_profile = households_ind + households_res + households_pub
 machine_profile = machines_ind + machines_res + machines_pub
 
