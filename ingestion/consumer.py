@@ -14,6 +14,7 @@ def consume(topic,cursor):
     try:
         for message in consumer:
             print('%s:%d:%d: key=%s value=%s' %(message.topic, message.partition, message.offset, message.key, message.value))
+            print(message.value)
             #cur.executemany(sql,vendor_list)
             #insert_query = """ INSERT INTO testing (timestamp, machine_id, household_id, usage) VALUES (%s,%s,%s,%s)"""
             #cursor.execute(insert_query, (value1,value2))
@@ -31,7 +32,7 @@ if __name__ == "__main__":
                                     password = "test123",
                                     host = "ec2-54-177-63-46.us-west-1.compute.amazonaws.com",
                                     port = "5432",
-                                    database = "testing")
+                                    database = "electricity")
         
         cursor = connection.cursor()
         consume('Usage',cursor)
