@@ -1,6 +1,7 @@
 import sys
 from kafka import KafkaConsumer
 import psycopg2
+import json
 
 
 def consume(topic,cursor):
@@ -10,7 +11,8 @@ def consume(topic,cursor):
                     topic_name,
                     group_id = 'group1',
                     bootstrap_servers = bootstrap_servers,
-                    auto_offset_reset='earliest')
+                    auto_offset_reset='earliest',
+                    value_deserializer=lambda x: json.loads(x.decode('utf-8')))
     try:
         for message in consumer:
             print('%s:%d:%d: key=%s value=%s' %(message.topic, message.partition, message.offset, message.key, message.value))
