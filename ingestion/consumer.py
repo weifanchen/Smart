@@ -29,9 +29,9 @@ if __name__ == "__main__":
     try:
         connection = psycopg2.connect(user = "postgres",
                                     password = "test123",
-                                    host = "127.0.0.1",
+                                    host = "ec2-54-177-63-46.us-west-1.compute.amazonaws.com",
                                     port = "5432",
-                                    database = "electricity")
+                                    database = "testing")
         
         cursor = connection.cursor()
         consume('Usage',cursor)
