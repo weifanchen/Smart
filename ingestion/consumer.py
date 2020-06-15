@@ -16,12 +16,11 @@ def consume(topic,cursor):
     try:
         for message in consumer:
             print('%s:%d:%d: key=%s value=%s' %(message.topic, message.partition, message.offset, message.key, message.value))
-            print(message.value)
             #cur.executemany(sql,vendor_list)
             
             insert_query = """ INSERT INTO testing (timestamp, machine_id, household_id, usage) VALUES (%s,%s,%s,%s)"""
-            cursor.execute(insert_query, (message.value['timestamp'],message.value['machine_id'],'nothing',message.value['usage']))
-            cursor.commit()
+            cursor.execute(insert_query, (message.value['timestamp'],message.value['machine_id'],message.value['household_id'],message.value['usage']))
+            connection.commit()
 
     except KeyboardInterrupt:
         sys.exit()

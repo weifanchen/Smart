@@ -24,6 +24,7 @@ with open('machine_profile.json', 'r') as macfile:
 
 # make it a file 
 # running time specify? 
+'''
 usage_range = {
     'pv_facade':[history_stat['pv_facade']['3%'],history_stat['pv_facade']['97%']],
     'pv_roof':[history_stat['pv_roof']['3%'],history_stat['pv_roof']['97%']],
@@ -44,6 +45,7 @@ usage_range = {
     'circulation_pump':[history_stat['circulation_pump']['3%'],history_stat['circulation_pump']['97%']],
     'grid_import':[0,0.03]
 }
+'''
 
 
 # event = timestamp, machine_id, usage
@@ -56,9 +58,10 @@ def usage_min_generator(machines,history_stat,topic_name,producer):
         #minn,maxx=usage_range[machine['machine_type']]
         event['timestamp'] = time.isoformat() # format??????? 
         event['machine_id'] = machine['machine_id']
+        event['household_id'] = machine['household_id']
         event['usage'] = round(random.uniform(minn, maxx),4)
         #print(event)
-        producer.send(topic_name,event) 
+        ack = producer.send(topic_name,event) 
         # send one by one or send a whole chuck of machine at one time?
 
 if __name__ == "__main__":
@@ -66,7 +69,7 @@ if __name__ == "__main__":
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-    usage_min_generator(machines,history_stat,topic_name,producer)
+    while True:
+        usage_min_generator(machines,history_stat,topic_name,producer)
 
 
-    git clone git@github.com:my-github-repo
