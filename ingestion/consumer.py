@@ -21,6 +21,7 @@ def consume(topic,cursor):
             
             insert_query = """ INSERT INTO testing (timestamp, machine_id, household_id, usage) VALUES (%s,%s,%s,%s)"""
             cursor.execute(insert_query, (message.value['timestamp'],message.value['machine_id'],'nothing',message.value['usage']))
+            cursor.commit()
 
     except KeyboardInterrupt:
         sys.exit()
