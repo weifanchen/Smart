@@ -57,7 +57,7 @@ def usage_min_generator(machines,history_stat,topic_name,producer):
         event['timestamp'] = time.isoformat() # format??????? 
         event['machine_id'] = machine['machine_id']
         event['usage'] = round(random.uniform(minn, maxx),4)
-        print(event)
+        #print(event)
         producer.send(topic_name,event) 
         # send one by one or send a whole chuck of machine at one time?
 
