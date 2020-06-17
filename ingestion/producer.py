@@ -6,9 +6,9 @@ import random
 from kafka import KafkaProducer
 import boto3 
 from time import sleep
-import sys 
-sys.path.insert(0, '../../') # locate to config folder
-import config
+#import sys 
+#sys.path.insert(0, '../../') # locate to config folder
+#import config
 
 
 '''
@@ -19,13 +19,19 @@ How to make the data consistent?
 ****
 Unit  kWh/min -> Wh/s
 '''
+with open('./../config.json') as cf:
+    config = json.load(cf)
+
+ACCESS_ID = config['ACCESS_ID']
+ACCESS_KEY = config['ACCESS_KEY']
+
 
 bucketname = 'electricity-data2'
 #itemname= 'usage_newschema.csv'
 machine_file= 'machine_profile_1.json'
 stat_file = 'stat.json'
-ACCESS_ID = config.aws_crediential['ACCESS_ID']
-ACCESS_KEY = config.aws_crediential['ACCESS_KEY']
+#ACCESS_ID = config.aws_crediential['ACCESS_ID']
+#ACCESS_KEY = config.aws_crediential['ACCESS_KEY']
 
 s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
 obj = s3.Object(bucketname, machine_file)
