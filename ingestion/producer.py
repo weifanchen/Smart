@@ -6,9 +6,9 @@ import random
 from kafka import KafkaProducer
 import boto3 
 from time import sleep
-import sys 
+#import sys 
 #sys.path.insert(0, '../../') # locate to config folder
-import config
+#import config
 
 
 '''
@@ -55,7 +55,7 @@ def initialize_events(start_time,machines,history_stat,topic_name,producer):
         event = dict()
         minn = history_stat[machine['machine_type']]['3%']
         maxx = history_stat[machine['machine_type']]['97%']
-        event['timestamp'] = start_time #time.isoformat() 
+        event['timestamp'] = start_time #string format
         event['machine_id'] = machine['machine_id']
         event['household_id'] = machine['household_id']
         event['running'] = random.choice([True,False])
@@ -65,13 +65,13 @@ def initialize_events(start_time,machines,history_stat,topic_name,producer):
         events.append(event)
     return events
 
-def following_events(time_delta,previous_events,topic_name,producer):
+def following_events(date_str,previous_events,topic_name,producer):
     print(previous_events[0]['timestamp'])
     margin = 0.1
     for event in previous_events: # = for each machine
-        event['timestamp'] = event['timestamp'] + time_delta #time.isoformat() 
+        event['timestamp'] = date_str
         event['running'] = event['running'] and random.random()>=0.9
-        event['usage'] = event['running'] *  event['usage'] * random.uniform(1-margin,1+margin)
+        event['usage'] = event['running'] * event['usage'] * random.uniform(1-margin,1+margin)
         if event['running'] and random.random()>=0.99: # abnormal usage
             event['usage'] = event['usage']*2  
 
@@ -85,12 +85,14 @@ if __name__ == "__main__":
     topic_name = 'Usage'
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
     date_str = '2015-01-01 01:00:00'
-    start_time=datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    first_events = initialize_events(start_time,machines,history_stat,topic_name,producer)
+    current_timestamp=datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    first_events = initialize_events(date_str,machines,history_stat,topic_name,producer)
     time_delta = datetime.timedelta(seconds=1)
     events = first_events
     while True:
-        temp = following_events(time_delta,events,topic_name,producer)
+        current_timestamp += time_delta 
+        date_str = current_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        temp = following_events(date_str,events,topic_name,producer)
         events = temp
         sleep(1)
 
