@@ -2,3 +2,4 @@ numpy
 pandas
 boto3
 psycopg2
+kafka-python

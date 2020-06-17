@@ -1,75 +1,85 @@
 import json
 import pandas as pd
-from datetime import datetime
+import datetime
 import numpy as np
 import random
 from kafka import KafkaProducer
+import boto3 
+from time import sleep
+import config
 
 
 '''
 How to stimulate new household/ new machine
-
 How to make the data consistent? 
 > wash machine runs steadily for 30min. 
+
 ****
-Unit  kWh/min -> Wh/min
-grid_import
+Unit  kWh/min -> Wh/s
 '''
 
-with open('stat.json') as f:
-  history_stat = json.load(f)
+bucketname = 'electricity-data2'
+#itemname= 'usage_newschema.csv'
+itemname= 'machine_profile_1.json'
+ACCESS_ID = config.aws_crediential['ACCESS_ID']
+ACCESS_KEY = config.aws_crediential['ACCESS_KEY']
 
-with open('machine_profile.json', 'r') as macfile:
-    machines=json.load(macfile)
+s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
+obj = s3.Object(bucketname, itemname)
+body = obj.get()['Body'].read()
+machines = json.loads(body.decode('utf-8'))
 
-# make it a file 
-# running time specify? 
-'''
-usage_range = {
-    'pv_facade':[history_stat['pv_facade']['3%'],history_stat['pv_facade']['97%']],
-    'pv_roof':[history_stat['pv_roof']['3%'],history_stat['pv_roof']['97%']],
-    'pv':[history_stat['pv']['3%'],history_stat['pv']['97%']],
-    'machine':[0,0.8],
-    'refrigerator':[0,0.03],
-    'ventilation':[0,0.03],
-    'compressor':[0,0.03],
-    'area_room':[0.003,0.461],
-    'area_office':[0.003,0.055],
-    'cooling_aggregate':[0,0.03],
-    'cooling_pumps':[0,0.03],
-    'ev':[0,0.03],
-    'dishwasher':[history_stat['dishwasher']['3%'],history_stat['dishwasher']['97%']],
-    'freezer':[history_stat['freezer']['3%'],history_stat['freezer']['97%']],
-    'heat_pump':[history_stat['heat_pump']['3%'],history_stat['heat_pump']['97%']],
-    'washing_machine':[history_stat['washing_machine']['3%'],history_stat['washing_machine']['97%']],
-    'circulation_pump':[history_stat['circulation_pump']['3%'],history_stat['circulation_pump']['97%']],
-    'grid_import':[0,0.03]
-}
-'''
+# with open('stat.json') as f:
+#   history_stat = json.load(f)
+
+# with open('machine_profile.json', 'r') as macfile:
+#     machines=json.load(macfile)
 
 
-# event = timestamp, machine_id, usage
-def usage_min_generator(machines,history_stat,topic_name,producer):
-    time = datetime.now()
+
+def initialize_events(start_time,machines,history_stat,topic_name,producer):
+    events = list()
     for machine in machines:
         event = dict()
         minn = history_stat[machine['machine_type']]['3%']
         maxx = history_stat[machine['machine_type']]['97%']
-        #minn,maxx=usage_range[machine['machine_type']]
-        event['timestamp'] = time.isoformat() # format??????? 
+        event['timestamp'] = start_time #time.isoformat() 
         event['machine_id'] = machine['machine_id']
         event['household_id'] = machine['household_id']
-        event['usage'] = round(random.uniform(minn, maxx),4)
-        #print(event)
+        event['running'] = random.choice([True,False])
+        event['usage'] = event['running'] * round(random.uniform(minn, maxx),4)
+        
         ack = producer.send(topic_name,event) 
-        # send one by one or send a whole chuck of machine at one time?
+        events.append(event)
+    return events
+
+def following_events(time_delta,previous_events,topic_name,producer):
+    print(previous_events[0]['timestamp'])
+    margin = 0.1
+    for event in previous_events: # = for each machine
+        event['timestamp'] = event['timestamp'] + time_delta #time.isoformat() 
+        event['running'] = event['running'] and random.random()>=0.9
+        event['usage'] = event['running'] *  event['usage'] * random.uniform(1-margin,1+margin)
+        if event['running'] and random.random()>=0.99: # abnormal usage
+            event['usage'] = event['usage']*2  
+
+        ack = producer.send(topic_name,event) 
+    return previous_events
+    
 
 if __name__ == "__main__":
     #random.seed(42)
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+    date_str = '2015-01-01 01:00:00'
+    start_time=datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    first_events = initialize_events(start_time,machines,history_stat,topic_name)
+    time_delta = datetime.timedelta(seconds=1)
+    events = first_events
     while True:
-        usage_min_generator(machines,history_stat,topic_name,producer)
+        temp = following_events(time_delta,events,topic_name)
+        events = temp
+        sleep(1)
 
 

@@ -28,7 +28,6 @@ def consume(topic,cursor):
 
 
 
-
 if __name__ == "__main__":
     try:
         connection = psycopg2.connect(user = "postgres",
