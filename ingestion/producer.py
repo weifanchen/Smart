@@ -19,7 +19,7 @@ How to make the data consistent?
 ****
 Unit  kWh/min -> Wh/s
 '''
-with open('./../config.json') as cf:
+with open('./../../config.json') as cf:
     config = json.load(cf)
 
 ACCESS_ID = config['ACCESS_ID']
