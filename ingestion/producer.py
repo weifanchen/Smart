@@ -6,6 +6,8 @@ import random
 from kafka import KafkaProducer
 import boto3 
 from time import sleep
+import sys 
+sys.path.insert(0, '../../') # locate to config folder
 import config
 
 
@@ -20,15 +22,19 @@ Unit  kWh/min -> Wh/s
 
 bucketname = 'electricity-data2'
 #itemname= 'usage_newschema.csv'
-itemname= 'machine_profile_1.json'
+machine_file= 'machine_profile_1.json'
+stat_file = 'stat.json'
 ACCESS_ID = config.aws_crediential['ACCESS_ID']
 ACCESS_KEY = config.aws_crediential['ACCESS_KEY']
 
 s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
-obj = s3.Object(bucketname, itemname)
+obj = s3.Object(bucketname, machine_file)
 body = obj.get()['Body'].read()
 machines = json.loads(body.decode('utf-8'))
 
+obj = s3.Object(bucketname, stat_file)
+body = obj.get()['Body'].read()
+history_stat = json.loads(body.decode('utf-8'))
 # with open('stat.json') as f:
 #   history_stat = json.load(f)
 
