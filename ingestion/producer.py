@@ -6,9 +6,9 @@ import random
 from kafka import KafkaProducer
 import boto3 
 from time import sleep
-#import sys 
+import sys 
 #sys.path.insert(0, '../../') # locate to config folder
-#import config
+import config
 
 
 '''
@@ -86,11 +86,11 @@ if __name__ == "__main__":
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
     date_str = '2015-01-01 01:00:00'
     start_time=datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    first_events = initialize_events(start_time,machines,history_stat,topic_name)
+    first_events = initialize_events(start_time,machines,history_stat,topic_name,producer)
     time_delta = datetime.timedelta(seconds=1)
     events = first_events
     while True:
-        temp = following_events(time_delta,events,topic_name)
+        temp = following_events(time_delta,events,topic_name,producer)
         events = temp
         sleep(1)
 
