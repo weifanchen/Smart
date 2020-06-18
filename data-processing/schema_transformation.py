@@ -55,3 +55,16 @@ new_df.to_csv('./usage_newschema.csv',index=False)
 #test=new_df[(new_df.machine_id=='residential6') & (new_df.timestamp.between('2015-01-15 04:00:00', '2015-01-15 05:00:00'))]
 
 #data.rename(columns={'household_id':'machine_id','machine_id':'household_id'}, inplace=True)
+
+'''
+stat = pd.read_json('./stat_old.json')
+new_stat = stat.apply(lambda x:x*1000/60)
+new_stat = new_stat.rename(columns={"area_room":"area_room_1","machine":"machine_1",'pv':'pv_3'})
+new_stat
+new_stat['pv']=new_stat[['pv_1','pv_2','pv_3']].mean(axis = 1) 
+new_stat['machine']=new_stat[['machine_1','machine_2','machine_3','machine_4','machine_5']].mean(axis = 1) 
+new_stat['area_room']=new_stat[['area_room_1','area_room_2','area_room_3','area_room_4']].mean(axis = 1) 
+
+new_stat.to_json('./stat.json',orient='columns')
+
+'''

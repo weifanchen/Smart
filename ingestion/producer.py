@@ -19,7 +19,7 @@ How to make the data consistent?
 ****
 Unit  kWh/min -> Wh/s
 '''
-with open('./../../config.json') as cf:
+with open('./config.json') as cf:
     config = json.load(cf)
 
 ACCESS_ID = config['ACCESS_ID']
@@ -27,7 +27,6 @@ ACCESS_KEY = config['ACCESS_KEY']
 
 
 bucketname = 'electricity-data2'
-#itemname= 'usage_newschema.csv'
 machine_file= 'machine_profile_1.json'
 stat_file = 'stat.json'
 #ACCESS_ID = config.aws_crediential['ACCESS_ID']
@@ -47,6 +46,11 @@ history_stat = json.loads(body.decode('utf-8'))
 # with open('machine_profile.json', 'r') as macfile:
 #     machines=json.load(macfile)
 
+current_event_filename = 'current_event.json'
+s3.Object(bucketname, current_event_filename).put(Body=events)
+
+obj = s3.Object(bucketname, current_event_filename)
+body = obj.get()['Body'].read()
 
 
 def initialize_events(start_time,machines,history_stat,topic_name,producer):
@@ -66,7 +70,6 @@ def initialize_events(start_time,machines,history_stat,topic_name,producer):
     return events
 
 def following_events(date_str,previous_events,topic_name,producer):
-    print(previous_events[0]['timestamp'])
     margin = 0.1
     for event in previous_events: # = for each machine
         event['timestamp'] = date_str
@@ -95,6 +98,7 @@ if __name__ == "__main__":
         temp = following_events(date_str,events,topic_name,producer)
         events = temp
         sleep(1)
+        
 
 
 
