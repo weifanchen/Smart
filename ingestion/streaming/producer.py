@@ -60,6 +60,7 @@ def following_events(date_str,previous_events,topic_name,producer):
     return previous_events
     
 
+
 def main(data_str,sleep_time):
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
@@ -68,7 +69,7 @@ def main(data_str,sleep_time):
     first_events = initialize_events(date_str,machines,history_stat,topic_name,kafka_producer)
     time_delta = datetime.timedelta(seconds=1)
     events = first_events
-    while True:
+    while current_timestamp < datetime.datetime.now():
         current_timestamp += time_delta 
         date_str = current_timestamp.strftime('%Y-%m-%d %H:%M:%S')
         temp = following_events(date_str,events,topic_name,kafka_producer)
@@ -78,8 +79,8 @@ def main(data_str,sleep_time):
 
 if __name__ == "__main__":
     #random.seed(42)
-    date_str = argv[0] if len(argv) else '2016-01-01 01:00:00'
-    sleep_time = argv[1] if len(argv) else 1
+    date_str = argv[1] if len(argv)-1 else '2016-01-01 01:00:00'
+    sleep_time = int(argv[2]) if len(argv)-1 else 1
     with open('./config.json') as cf:
         config = json.load(cf)
 
@@ -92,7 +93,4 @@ if __name__ == "__main__":
     machines = read_profile_from_s3(s3,bucketname,machine_file)
     history_stat = read_profile_from_s3(s3,bucketname,stat_file)
     main(data_str,sleep_time)
-        
-
-
 
