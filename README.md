@@ -1,17 +1,10 @@
 # Smart 
-Real time power tracking
-
-[Presentation](https://www.example.com)
-<br>
-[Video demo](https://www.example.com)
-
-
-
-# Introduction
-
+## Real time power tracking
 Using stimulate smart meter data to create a real-time dashboard for power companies to reduce blackouts and detect abnormal consumption.
 
-# How to install and get it up and running
+[Presentation](https://docs.google.com/presentation/d/1wlVYwPeA40bu3ZdPmVV9QsoGN9PVOwfzJIskjYUxISw/edit?usp=sharing)
+<br>
+[Video demo](https://www.example.com)
 
 
 # Architecture
@@ -22,11 +15,11 @@ Using stimulate smart meter data to create a real-time dashboard for power compa
 The data is scaled and stimulated based on [Open Power System Data](https://data.open-power-system-data.org/household_data/)
 
 
-
+<!---
 # Engineering challenges
 ### Missing message while high throughput
 
 ### Query from large database
 
 # Trade-offs
-
+--->

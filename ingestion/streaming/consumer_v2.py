@@ -1,5 +1,8 @@
 import sys
 from kafka import KafkaConsumer
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
 import psycopg2
 import json
 
