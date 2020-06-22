@@ -93,11 +93,13 @@ def main():
 
 if __name__ == "__main__":
     #random.seed(42)
-    date_str = argv[0] if len(argv.len) else '2016-01-01 01:00:00'
-    sleep_time = argv[1] if len(argv.len) else 1
+    date_str = '2016-01-01 01:00:00'
+    sleep_time = 1
     with open('./config.json') as cf:
     config = json.load(cf)
 
+    date_str = config['producer_start_date']
+    sleep_time = config['producer_sleep_time']
     ACCESS_ID = config['ACCESS_ID']
     ACCESS_KEY = config['ACCESS_KEY']
     s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
