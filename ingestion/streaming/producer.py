@@ -6,52 +6,30 @@ import random
 from kafka import KafkaProducer
 import boto3 
 from time import sleep
-#import sys 
-#sys.path.insert(0, '../../') # locate to config folder
-#import config
+from sys import argv
 
-
+''' 
+producer_v1
+stimulate electricity usage event 
+clear schema
+event structure = ['timestamp', 'machine_id', 'household_id', running, 'usage']
 '''
-How to stimulate new household/ new machine
-How to make the data consistent? 
-> wash machine runs steadily for 30min. 
 
-****
-Unit  kWh/min -> Wh/s
-'''
-with open('./config.json') as cf:
-    config = json.load(cf)
+def connect_kafka_producer(bootstrap_servers):
+    _producer = None
+    try:
+        _producer = KafkaProducer(bootstrap_servers=bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+    except Exception as ex:
+        print('Exception while connecting Kafka')
+        print(str(ex))
+    finally:
+        return _producer
 
-ACCESS_ID = config['ACCESS_ID']
-ACCESS_KEY = config['ACCESS_KEY']
-
-
-bucketname = 'electricity-data2'
-machine_file= 'machine_profile_1.json'
-stat_file = 'stat.json'
-#ACCESS_ID = config.aws_crediential['ACCESS_ID']
-#ACCESS_KEY = config.aws_crediential['ACCESS_KEY']
-
-s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
-obj = s3.Object(bucketname, machine_file)
-body = obj.get()['Body'].read()
-machines = json.loads(body.decode('utf-8'))
-
-obj = s3.Object(bucketname, stat_file)
-body = obj.get()['Body'].read()
-history_stat = json.loads(body.decode('utf-8'))
-# with open('stat.json') as f:
-#   history_stat = json.load(f)
-
-# with open('machine_profile.json', 'r') as macfile:
-#     machines=json.load(macfile)
-
-current_event_filename = 'current_event.json'
-s3.Object(bucketname, current_event_filename).put(Body=events)
-
-obj = s3.Object(bucketname, current_event_filename)
-body = obj.get()['Body'].read()
-
+def read_profile_from_s3(s3,bucketname,_file):
+    obj = s3.Object(bucketname, _file)
+    body = obj.get()['Body'].read()
+    data = json.loads(body.decode('utf-8'))
+    return data
 
 def initialize_events(start_time,machines,history_stat,topic_name,producer):
     events = list()
@@ -82,22 +60,38 @@ def following_events(date_str,previous_events,topic_name,producer):
     return previous_events
     
 
-if __name__ == "__main__":
-    #random.seed(42)
+def main():
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
-    producer = KafkaProducer(bootstrap_servers = bootstrap_servers,value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-    date_str = '2015-01-01 01:00:00'
+    kafka_producer=connect_kafka_producer(bootstrap_servers)
     current_timestamp=datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    first_events = initialize_events(date_str,machines,history_stat,topic_name,producer)
+    first_events = initialize_events(date_str,machines,history_stat,topic_name,kafka_producer)
     time_delta = datetime.timedelta(seconds=1)
     events = first_events
     while True:
         current_timestamp += time_delta 
         date_str = current_timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        temp = following_events(date_str,events,topic_name,producer)
+        temp = following_events(date_str,events,topic_name,kafka_producer)
         events = temp
-        sleep(1)
+        sleep(sleep_time)
+
+
+if __name__ == "__main__":
+    #random.seed(42)
+    date_str = argv[0] if len(argv.len) else '2016-01-01 01:00:00'
+    sleep_time = argv[1] if len(argv.len) else 1
+    with open('./config.json') as cf:
+    config = json.load(cf)
+
+    ACCESS_ID = config['ACCESS_ID']
+    ACCESS_KEY = config['ACCESS_KEY']
+    s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
+    bucketname = 'electricity-data2'
+    machine_file= 'machine_profile_1.json'
+    stat_file = 'stat.json'
+    machines = read_profile_from_s3(s3,bucketname,machine_file)
+    history_stat = read_profile_from_s3(s3,bucketname,stat_file)
+    main()
         
 
 
