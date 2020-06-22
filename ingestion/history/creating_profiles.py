@@ -10,16 +10,7 @@ import uuid
 
 
 
-'''
-Create household profiles, machine profiles
-
-https://data.open-power-system-data.org/household_data/2020-04-15
-*****
-
-export !!!!!!!
-pv 
-ev
-'''
+'''Create household profiles, machine profiles'''
 
 # data = pd.read_csv('./data/usage_newschema.csv')
 fake = Faker('de_DE')
@@ -99,14 +90,4 @@ with open('household_profile.json', 'w') as houfile:
 
 with open('machine_profile.json', 'w') as macfile:
     json.dump(machine_profile, macfile)
-
-
-
-
-
     
-    
-
-        
-
-

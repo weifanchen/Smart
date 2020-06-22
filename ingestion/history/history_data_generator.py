@@ -8,10 +8,11 @@ from time import sleep
 import psycopg2
 
 
-'''generate history data from 2014-12-11 10:00:00 - 2019-05-01 15:11:00'''
+'''generate history data from 2019-01-01 00:00:00 - 2020-01-01 00:00:00'''
 
 with open('./config.json') as cf:
     config = json.load(cf)
+
 
 ACCESS_ID = config['ACCESS_ID']
 ACCESS_KEY = config['ACCESS_KEY']
@@ -51,44 +52,77 @@ def initialize_events(start_time,machines,history_stat):
         event['household_id'] = machine['household_id']
         event['running'] = random.choice([True,False])
         event['usage'] = event['running'] * round(random.uniform(minn, maxx),4)
-        
         events.append(event)
     return events
 
 
 def following_events(date_str,previous_events):
     margin = 0.1
-    for event in previous_events: # = for each machine
-        event['timestamp'] = date_str
-        event['running'] = event['running'] and random.random()>=0.9
-        event['usage'] = event['running'] * event['usage'] * random.uniform(1-margin,1+margin)
-        if event['running'] and random.random()>=0.99: # abnormal usage
-            event['usage'] = event['usage']*2  
+    events = list()
+    for pv in previous_events: # = for each machine
+        current_event = dict()
+        current_event['timestamp'] = date_str
+        current_event['machine_id'] = pv['machine_id']
+        current_event['household_id'] = pv['household_id']
+        current_event['running'] = pv['running'] or (random.random()>0.85)
+        current_event['usage'] = current_event['running'] * pv['usage'] * random.uniform(1-margin,1+margin)
+        if current_event['running'] and random.random()>=0.99: # abnormal usage
+            current_event['usage'] = pv['usage']*2  
+        events.append(current_event)
+    return events    
 
-    return previous_events
+def write_file_to_s3(s3,bucketname,file_name,data):
+    obj = s3.Object(bucketname, file_name)
+    temp=obj.put(Body=json.dumps(data))
+    
 
-start_str = '2014-12-11 10:00:00'
-end_str = '2014-12-12 10:00:00'
+def write_file_to_BD(file_name):
+    pass
 
-#end_str = '2015-01-01 00:00:00'
+def write_file(file_name,events_chuck):
+    #with open(file_name, 'w') as outfile:
+    #    json.dump(events_chuck, outfile)
+    df = pd.DataFrame.from_records(events_chuck)
+    df = df.drop(['running'],axis=1)
+    df.to_json('./history_data/'+file_name,orient='records')
 
-#end_str = '2019-05-01 15:11:00'
+
+
+start_str = '2018-09-30 00:00:00'
+end_str = '2018-12-31 00:00:00'
 
 current_timestamp = datetime.datetime.strptime(start_str, '%Y-%m-%d %H:%M:%S')
+current_date=current_timestamp.strftime('%Y-%m-%d')
 end_timestamp = datetime.datetime.strptime(end_str, '%Y-%m-%d %H:%M:%S')
 time_delta = datetime.timedelta(minutes=1)
 
 first_events = initialize_events(start_str,machines,history_stat)
 events = first_events
 events_chuck = list()
-while current_timestamp< end_timestamp:
+#events_chuck += first_events
+while current_timestamp < end_timestamp:
+    #print(current_timestamp)
+    events_chuck += events
     current_timestamp += time_delta 
     date_str = current_timestamp.strftime('%Y-%m-%d %H:%M:%S')
     temp = following_events(date_str,events)
+    #events_chuck += temp
     events = temp
-    events_chuck += events
+    if date_str.split(' ')[1]=='00:00:00': # the end of the day
+        #write_file_to_s3(s3,bucketname,date_str.split(' ')[0],events_chuck)
+        file_name = 'events_{}.json'.format(current_date)
+        write_file(file_name,events_chuck)
+        current_date=current_timestamp.strftime('%Y-%m-%d')
+        print(current_date)
+        events_chuck = list()
+        events_chuck += events
 
+'''
 file_name = 'events_{}.json'.format(current_timestamp.strftime('%Y_%m'))
 
 with open(file_name, 'w') as outfile:
     json.dump(events_chuck, outfile)
+
+df = pd.DataFrame.from_records(events_chuck)
+df = pd.read_json('events_2018-01-01.json')
+'''
