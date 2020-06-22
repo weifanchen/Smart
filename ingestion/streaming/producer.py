@@ -60,7 +60,7 @@ def following_events(date_str,previous_events,topic_name,producer):
     return previous_events
     
 
-def main():
+def main(data_str,sleep_time):
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
     kafka_producer=connect_kafka_producer(bootstrap_servers)
@@ -78,10 +78,10 @@ def main():
 
 if __name__ == "__main__":
     #random.seed(42)
-    date_str = argv[0] if len(argv.len) else '2016-01-01 01:00:00'
-    sleep_time = argv[1] if len(argv.len) else 1
+    date_str = argv[0] if len(argv) else '2016-01-01 01:00:00'
+    sleep_time = argv[1] if len(argv) else 1
     with open('./config.json') as cf:
-    config = json.load(cf)
+        config = json.load(cf)
 
     ACCESS_ID = config['ACCESS_ID']
     ACCESS_KEY = config['ACCESS_KEY']
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     stat_file = 'stat.json'
     machines = read_profile_from_s3(s3,bucketname,machine_file)
     history_stat = read_profile_from_s3(s3,bucketname,stat_file)
-    main()
+    main(data_str,sleep_time)
         
 
 
