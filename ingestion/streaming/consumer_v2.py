@@ -28,6 +28,18 @@ def consume(topic,cursor):
     except KeyboardInterrupt:
         sys.exit()
 
+def consume_spark(topic,brokerAddresses):
+    #spark = SparkSession.builder.appName("PythonHeartbeatStreaming").getOrCreate()
+    sc = SparkContext("local[2]", "APP_NAME")
+    ssc = StreamingContext(sc, batchTime)    
+    kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokerAddresses})
+    kvs.pprint() # Just printing result on stdout.
+    
+    # Starting the task run.
+    ssc.start()
+    ssc.awaitTermination()
+
+
 def connect_to_DB(config):
     try:
         connection = psycopg2.connect(user = config['postgre_user'],
@@ -57,7 +69,11 @@ def connect_to_DB(config):
 if __name__ == "__main__":
     with open('./config.json') as cf:
         config = json.load(cf)
-    connection = connect_to_DB(config)
-    cursor = connection.cursor()
-    consume('Usage',cursor)
+    topic_name = 'Usage'
+    brokerAddresses = "localhost:9092"
+    batchTime = 20
+    consume_spark(topic_name,brokerAddresses)
+    #connection = connect_to_DB(config)
+    #cursor = connection.cursor()
+    #consume('Usage',cursor)
     
