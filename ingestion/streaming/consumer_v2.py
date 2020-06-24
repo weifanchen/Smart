@@ -5,7 +5,10 @@ from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import psycopg2
 import json
+import os
 
+#os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
+'''micro batch processing'''
 
 def consume(topic,cursor):
     bootstrap_servers = ['localhost:9092']
@@ -28,16 +31,45 @@ def consume(topic,cursor):
     except KeyboardInterrupt:
         sys.exit()
 
+# main job, gather the 5 second data, group by machine_id, write to DB
 def consume_spark(topic,brokerAddresses):
     #spark = SparkSession.builder.appName("PythonHeartbeatStreaming").getOrCreate()
+    window_length = 5
+    sliding_interval = 5
     sc = SparkContext("local[2]", "APP_NAME")
+    sc.setLogLevel("WARN")
     ssc = StreamingContext(sc, batchTime)    
-    kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokerAddresses})
-    kvs.pprint() # Just printing result on stdout.
-    
+    kafkaStream = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokerAddresses})
+    parsed = kafkaStream.map(lambda x: json.loads(x[1].decode('utf-8')))
+    #parsed.map(lambda x:(x['']))
+    parsed.foreachRDD(lambda x:testing(x))
+    def testing(rdd):
+        if rdd.isEmpty():
+            print("RDD is empty")
+        else:
+            df = rdd.toDF()
+            df.show()
+            #df2 = df.withColumn("timestamp", df.ts.cast("timestamp"))
+            
+    parsed.window(window_length,sliding_interval).count().pprint()
+    #parsed.count().map(lambda x:'Tweets in this batch: %s' % x).pprint()
+    #parsed.pprint()
+    #rdd.foreachRDD()
+
     # Starting the task run.
     ssc.start()
     ssc.awaitTermination()
+
+def write_to_DB(df):
+    '''transform RDD to dataframe that fit the schema in the table'''
+    # url = 'jdbc:postgresql://ec2-52-8-144-26.us-west-1.compute.amazonaws.com/electricity' # new DB
+    url = 'jdbc:postgresql://ec2-54-177-63-46.us-west-1.compute.amazonaws.com/electricity' # old small one
+    properties = {'user': 'postgres', 'password': 'test123'}
+    tablename = 'test2'
+    df.write.jdbc(url=url, table= tablename, properties=properties,mode = 'append')
+    #sample.map(lambda x:(x['machine_id'],x['usage'])).groupByKey().map(lambda x:(x[0],sum(x[1]))).collect()
+    #dfWithSchema = spark.createDataFrame(rdd).toDF("id", "vals")
+
 
 
 def connect_to_DB(config):
@@ -71,7 +103,7 @@ if __name__ == "__main__":
         config = json.load(cf)
     topic_name = 'Usage'
     brokerAddresses = "localhost:9092"
-    batchTime = 20
+    batchTime = 5
     consume_spark(topic_name,brokerAddresses)
     #connection = connect_to_DB(config)
     #cursor = connection.cursor()

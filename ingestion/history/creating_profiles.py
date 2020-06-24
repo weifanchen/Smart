@@ -15,7 +15,6 @@ import uuid
 # data = pd.read_csv('./data/usage_newschema.csv')
 fake = Faker('de_DE')
 
-
 industrial_num = 10
 residential_num = 30
 public_num = 5
