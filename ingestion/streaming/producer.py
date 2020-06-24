@@ -60,7 +60,7 @@ def following_events(date_str,previous_events,topic_name,producer):
     
 
 
-def main(data_str,sleep_time):
+def main(date_str,sleep_time):
     bootstrap_servers = ['localhost:9092']
     topic_name = 'Usage'
     kafka_producer=connect_kafka_producer(bootstrap_servers)
@@ -93,5 +93,5 @@ if __name__ == "__main__":
     stat_file = 'stat.json'
     machines = read_profile_from_s3(s3,bucketname,machine_file)
     history_stat = read_profile_from_s3(s3,bucketname,stat_file)
-    main(data_str,sleep_time)
+    main(date_str,sleep_time)
 

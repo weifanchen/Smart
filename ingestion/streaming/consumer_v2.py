@@ -6,6 +6,12 @@ from pyspark.streaming.kafka import KafkaUtils
 import psycopg2
 import json
 
+def testing(rdd):
+        if rdd.isEmpty():
+            print("RDD is empty")
+        else:
+            df = rdd.toDF()
+            df.show()
 
 def consume(topic,cursor):
     bootstrap_servers = ['localhost:9092']
@@ -28,13 +34,27 @@ def consume(topic,cursor):
     except KeyboardInterrupt:
         sys.exit()
 
+def f(x):
+    x.take(10)
+
 def consume_spark(topic,brokerAddresses):
     #spark = SparkSession.builder.appName("PythonHeartbeatStreaming").getOrCreate()
-    sc = SparkContext("local[2]", "APP_NAME")
+    window_length = 5
+    sliding_interval = 5
+    sc = SparkContext("local[1]", "APP_NAME")
+    sc.setLogLevel("WARN")
     ssc = StreamingContext(sc, batchTime)    
     kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokerAddresses})
-    kvs.pprint() # Just printing result on stdout.
-    
+    kvs.countByWindow(5,5).pprint()
+    # parsed = kvs.map(lambda v:json.loads(v[1]))
+    # parsed.foreachRDD(lambda x:testing(x))
+    # parsed.window(window_length,sliding_interval).count().pprint()
+    # kvs.pprint() # Just printing result on stdout.
+    #parsed.count().map(lambda x:'Tweets in this batch: %s' % x).pprint()
+    #parsed.pprint()
+
+    #fore = parsed.foreachRDD(f) 
+
     # Starting the task run.
     ssc.start()
     ssc.awaitTermination()
@@ -71,7 +91,7 @@ if __name__ == "__main__":
         config = json.load(cf)
     topic_name = 'Usage'
     brokerAddresses = "localhost:9092"
-    batchTime = 20
+    batchTime = 1
     consume_spark(topic_name,brokerAddresses)
     #connection = connect_to_DB(config)
     #cursor = connection.cursor()
