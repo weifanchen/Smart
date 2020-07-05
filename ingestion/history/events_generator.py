@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import random
 import boto3 
+import time
 from time import sleep
 import psycopg2
 
@@ -74,6 +75,14 @@ def write_file_to_BD(connection,events):
     cursor.execute(query)
     connection.commit()
 
+insert_query = 'INSERT into history_events(timestamp, machine_id, household_id, usage) VALUES (%s,%s,%s,%s)'
+start = time.time()
+for e in day_events:
+    cursor.execute(insert_query, (e['timestamp'],e['machine_id'],e['household_id'],e['usage']))
+    connection.commit()
+end = time.time()
+print(end-start)
+
 
 def write_file(file_name,events_day):
     #with open(file_name, 'w') as outfile:
@@ -83,11 +92,7 @@ def write_file(file_name,events_day):
     df.to_json('./history_data/'+file_name,orient='records')
 
 def connect_to_DB(config):
-    connection = psycopg2.connect(user = config['postgre_user'],
-                                    password = config['postgre_pwd'],
-                                    host = config['postgre_host'],
-                                    port = config['postgre_port'],
-                                    database = config['postgre_db'])
+    connection = psycopg2.connect(**config['postgres_conn'])
     return connection
     
 def main():
@@ -130,9 +135,6 @@ if __name__ == "__main__":
     bucketname = 'electricity-data2'
     machine_file= 'machine_profile_1.json'
     stat_file = 'stat_wh_min_0629.json'
-
-    with open('./config.json') as cf:
-        config = json.load(cf)
 
     s3 = boto3.resource('s3',aws_access_key_id=config['ACCESS_ID'],aws_secret_access_key= config['ACCESS_KEY'])
     machines = read_profile_from_s3(s3,bucketname,machine_file)
