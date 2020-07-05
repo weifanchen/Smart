@@ -8,9 +8,7 @@ import boto3
 from time import sleep
 
 ''' 
-producer_v1
 stimulate electricity usage event 
-clear schema
 event structure = ['timestamp', 'machine_id', 'household_id', running, 'usage']
 '''
 
@@ -32,32 +30,45 @@ def read_profile_from_s3(s3,bucketname,_file):
 
 def initialize_events(start_time,machines,history_stat,topic_name,producer):
     events = list()
-    for machine in machines:
+    for machine_id, machine in machines.items():
         event = dict()
         minn = history_stat[machine['machine_type']]['3%']
         maxx = history_stat[machine['machine_type']]['97%']
         event['timestamp'] = start_time #string format
-        event['machine_id'] = machine['machine_id']
+        event['machine_id'] = machine_id
         event['household_id'] = machine['household_id']
         event['running'] = random.choice([True,False])
         event['usage'] = event['running'] * round(random.uniform(minn, maxx),4)
         
-        ack = producer.send(topic_name,event) 
+        #ack = producer.send(topic_name,event) 
         events.append(event)
     return events
 
-def following_events(date_str,previous_events,topic_name,producer):
-    margin = 0.1
-    for event in previous_events: # = for each machine
-        event['timestamp'] = date_str
-        event['running'] = event['running'] and random.random()>=0.9
-        event['usage'] = event['running'] * event['usage'] * random.uniform(1-margin,1+margin)
-        if event['running'] and random.random()>=0.99: # abnormal usage
-            event['usage'] = event['usage']*2  
+def generate_abnormal_event(machine_id,previous_usage,machines,history_stat):
+    machine_type = machines[machine_id]['machine_type']
+    param = 1
+    if previous_usage < history_stat[machine_type]['75%']: param =2 
+    else: param =1
+    current_usage = previous_usage * param * history_stat[machine_type]['std']
+    return current_usage 
 
-        ack = producer.send(topic_name,event) 
-    return previous_events
-    
+def following_events(date_str,previous_events,topic_name,producer):
+    margin = 0.15
+    events = list()
+    for pv in previous_events: # = for each machine
+        current_event = dict()
+        current_event['timestamp'] = date_str
+        current_event['machine_id'] = pv['machine_id']
+        current_event['houmsehold_id'] = pv['household_id']
+        current_event['running'] = pv['running'] or (random.random()>0.7)
+        if current_event['running'] and random.random()>=0.995: # abnormal event 
+            current_event['usage'] = generate_abnormal_event(pv['machine_id'],pv['usage'],machines,history_stat) # 回傳值
+        else:
+            current_event['usage'] = current_event['running'] * pv['usage'] * random.uniform(1-margin,1+margin) 
+        events.append(current_event)
+        ack = producer.send(topic_name,current_event)
+    return events   
+
 
 def main(date_str,sleep_time):
     bootstrap_servers = ['localhost:9092']
@@ -77,7 +88,7 @@ def main(date_str,sleep_time):
 
 if __name__ == "__main__":
     #random.seed(42)
-    date_str = '2016-01-01 01:00:00'
+    date_str = '2020-01-01 00:00:00'
     sleep_time = 1
     with open('./config.json') as cf:
         config = json.load(cf)
@@ -89,9 +100,8 @@ if __name__ == "__main__":
     s3 = boto3.resource('s3',aws_access_key_id=ACCESS_ID,aws_secret_access_key= ACCESS_KEY)
     bucketname = 'electricity-data2'
     machine_file= 'machine_profile_1.json'
-    stat_file = 'stat.json'
+    stat_file = 'stat_wh_sec_0629.json'
     machines = read_profile_from_s3(s3,bucketname,machine_file)
     history_stat = read_profile_from_s3(s3,bucketname,stat_file)
     main(date_str,sleep_time)
-        
 

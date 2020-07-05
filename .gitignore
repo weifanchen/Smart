@@ -4,3 +4,4 @@ misc/
 *.ipynb
 .ipynb_checkpoints/
 config.py
+old_files/
