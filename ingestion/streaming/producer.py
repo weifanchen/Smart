@@ -59,7 +59,7 @@ def following_events(date_str,previous_events,topic_name,producer):
         current_event = dict()
         current_event['timestamp'] = date_str
         current_event['machine_id'] = pv['machine_id']
-        current_event['houmsehold_id'] = pv['household_id']
+        current_event['household_id'] = pv['household_id']
         current_event['running'] = pv['running'] or (random.random()>0.7)
         if current_event['running'] and random.random()>=0.995: # abnormal event 
             current_event['usage'] = generate_abnormal_event(pv['machine_id'],pv['usage'],machines,history_stat) # 回傳值

@@ -10,7 +10,7 @@ import datetime
 #os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
 
 '''micro batch processing'''
-./spark-2.2.3-bin-hadoop2.7/bin/pyspark --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.3
+# ./spark-2.2.3-bin-hadoop2.7/bin/pyspark --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.3
 
 def process_stream(rdd):
     if rdd.isEmpty():
