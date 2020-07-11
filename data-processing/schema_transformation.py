@@ -48,9 +48,6 @@ Outliers
 new_df.drop([50454793 , 50454855, 58765795, 58765820], inplace=True)
 new_df.to_csv('./data/usage_newschema_no_outlier.csv',index=False)
 
-
-
-
 def columns_adjustment(stat):
     stat = stat.T
     stat = stat.rename(columns={"area_room":"area_room_1","machine":"machine_1",'pv':'pv_3'})
@@ -77,10 +74,7 @@ def get_stats(df):
     stat_wh_sec.to_json('./initial_setup/stat_wh_sec_0629.json',orient='columns')
    
 
-
-
-
-
+get_stats(new_df)
 
 
 

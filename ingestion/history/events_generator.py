@@ -122,11 +122,7 @@ def main():
             events_day = list()
             events_day += events
 
-# def change_machines_structure(machines):
-#     new_struct = dict()
-#     for machine in machines:
-#         new_struct[machine['machine_id']] = {'machine_type':machine['machine_type'],'household_id':machine['household_id']}
-#     return new_struct
+
 
 if __name__ == "__main__":
     with open('./config.json') as cf:
@@ -145,6 +141,5 @@ if __name__ == "__main__":
     connection = connect_to_DB(config)
     main()
 
-    # with open('./initial_setup/machine_profile_1.json','w') as outfile:
-    #     json.dump(new_struct_machine,outfile)
+
 

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS events(
     timestamp TIMESTAMP,
     machine_id VARCHAR(40),
     household_id VARCHAR(40), 
-    usage NUMERIC (8, 4),
+    usage NUMERIC (9, 4)
  );
 
  CREATE TABLE IF NOT EXISTS anomalies(
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS events(
     timestamp TIMESTAMP,
     machine_id VARCHAR(40),
     household_id VARCHAR(40), 
-    usage NUMERIC (8, 4)
+    usage NUMERIC (10, 4)
  );
 
 CREATE TABLE IF NOT EXISTS machines(

@@ -1,0 +1,1 @@
+./spark-2.2.3-bin-hadoop2.7/bin/spark-submit --executor-memory 3G --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.3 --jars postgresql-42.2.13.jar --driver-class-path postgresql-42.2.13.jar ./Insight_project/ingestion/streaming/consumer.py 

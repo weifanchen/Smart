@@ -15,9 +15,9 @@ import uuid
 # data = pd.read_csv('./data/usage_newschema.csv')
 fake = Faker('de_DE')
 
-industrial_num = 10
+industrial_num = 20
 residential_num = 30
-public_num = 5
+public_num = 6
 
 housetype_list = ['public','residential','industrial']
 
@@ -73,7 +73,11 @@ def generate_meter(housetype,machine_list,household_id):
 
     return result, machine_prof
  
-
+def change_machines_structure(machines):
+    new_struct = dict()
+    for machine in machines:
+        new_struct[machine['machine_id']] = {'machine_type':machine['machine_type'],'household_id':machine['household_id']}
+    return new_struct
 
 household_profile = list()
 machine_profile = list()
@@ -83,10 +87,11 @@ households_pub, machines_pub = generate_household('public',public_num,machine_li
 
 household_profile = households_ind + households_res + households_pub
 machine_profile = machines_ind + machines_res + machines_pub
+machine_profile=change_machines_structure(machine_profile)
 
-with open('household_profile.json', 'w') as houfile:
+with open('./initial_setup/household_profile_3.json', 'w') as houfile:
     json.dump(household_profile, houfile)
 
-with open('machine_profile.json', 'w') as macfile:
+with open('./initial_setup/machine_profile_3.json', 'w') as macfile:
     json.dump(machine_profile, macfile)
     
